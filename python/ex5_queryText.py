@@ -5,77 +5,35 @@
 
 from __future__ import print_function
 
-import grpc
-
+import aimakerskitutil as aikit
 import gigagenieRPC_pb2
-import gigagenieRPC_pb2_grpc
 
-import os
-import datetime
-import hmac
-import hashlib
+CLIENT_ID = 'Y2xpZW50X2lkMTU1MTE0NDE1OTE4NQ=='
+CLIENT_KEY = 'Y2xpZW50X2tleTE1NTExNDQxNTkxODU='
+CLIENT_SECRET = 'Y2xpZW50X3NlY3JldDE1NTExNDQxNTkxODU='
 
-# Config for GiGA Genie gRPC
-CLIENT_ID = ''
-CLIENT_KEY = ''
-CLIENT_SECRET = ''
-HOST = 'gate.gigagenie.ai'
-PORT = 4080
+aikit.initClientKey(CLIENT_ID, CLIENT_KEY, CLIENT_SECRET)
 
-### COMMON : Client Credentials ###
-
-def getMetadata():
-	timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
-	message = CLIENT_ID + ':' + timestamp
-
-	signature = hmac.new(CLIENT_SECRET.encode(), message.encode(), hashlib.sha256).hexdigest()
-
-	metadata = [('x-auth-clientkey', CLIENT_KEY),
-				('x-auth-timestamp', timestamp),
-				('x-auth-signature', signature)]
-
-	return metadata
-
-def credentials(context, callback):
-	callback(getMetadata(), None)
-
-def getCredentials():
-	sslCred = grpc.ssl_channel_credentials()
-
-	authCred = grpc.metadata_call_credentials(credentials)
-
-	return grpc.composite_channel_credentials(sslCred, authCred)
-
-### END OF COMMON ###
+query = aikit.getKtApi()
 
 # DIALOG : queryByText
 def queryByText(text):
-
-	channel = grpc.secure_channel('{}:{}'.format(HOST, PORT), getCredentials())
-	stub = gigagenieRPC_pb2_grpc.GigagenieStub(channel)
-
 	message = gigagenieRPC_pb2.reqQueryText()
 	message.queryText = text
 	message.userSession = "1234"
 	message.deviceId = "yourdevice"
-		
-	response = stub.queryByText(message)
+	response = query.queryByText(message)
 
-	print ("\n\nresultCd: %d" % (response.resultCd))
+	print ("\n\nresultCd: {}".format(response.resultCd))
 	if response.resultCd == 200:
-		print ("\n\n\n질의한 내용: %s" % (response.uword).encode('utf-8'))
-		#dssAction = response.action
-		for a in response.action:
-			#print (a.mesg)
-			response = (a.mesg).encode('utf-8')
-			#print (a.actType)
-		parsing_resp = response.replace('<![CDATA[', '')
-		parsing_resp = parsing_resp.replace(']]>', '')
-		print("\n\n질의에 대한 답변: " + parsing_resp + '\n\n\n')
-		#return response.url
+		print ("\n\n\n질의한 내용: {}".format(response.uword))
+		
+		answer = response.action[0].mesg
+
+		parsedAnswer = answer.replace('<![CDATA[', '').replace(']]>', '')
+		print("\n\n질의에 대한 답변: {} \n\n\n".format(parsedAnswer))
 	else:
-		print ("Fail: %d" % (response.resultCd))
-		#return None	 
+		print ("Fail: {}".format(response.resultCd))
 
 def main():
 

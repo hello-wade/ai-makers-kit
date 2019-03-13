@@ -24,6 +24,7 @@ CLIENT_KEY = config.get('client', 'clientkey')
 CLIENT_SECRET = config.get('client', 'clientsecret')
 HOST = config.get('grpc', 'host')
 PORT = int(config.get('grpc', 'port'))
+SSLCERTFILE = config.get('grpc', 'cert')
 
 ### COMMON : Client Credentials ###
 
@@ -59,7 +60,9 @@ def credentials(context, callback):
     callback(getMetadata(), None)
 
 def getCredentials():
-    sslCred = grpc.ssl_channel_credentials()
+    with open(SSLCERTFILE, 'rb') as f:
+        trusted_certs = f.read()
+    sslCred = grpc.ssl_channel_credentials(root_certificates=trusted_certs)
 
     authCred = grpc.metadata_call_credentials(credentials)
 
@@ -96,17 +99,17 @@ def _generate_request_voice():
 
     with MicrophoneStream(RATE, CHUNK) as stream:
         audio_generator = stream.generator()
-    
+
         for content in audio_generator:
 
             message = gigagenieRPC_pb2.reqVoice()
             message.audioContent = content
             yield message
-            
+
             rms = audioop.rms(content,2)
             #print_rms(rms)
 
-def getVoice2Text():	
+def getVoice2Text():
 
     stub = grpc_conn()
 

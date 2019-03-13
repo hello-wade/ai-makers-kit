@@ -82,14 +82,7 @@ class MicrophoneStream(object):
             yield b''.join(data)
 # [END audio_stream]
 
-def print_rms(rms):
-    out = ''
-    for _ in range(int(round(rms/30))):
-        out = out + '*'
-    
-    print (out)
-
-def play_wav(fname, chunk=CHUNK):
+def playWav(fname, chunk=CHUNK):
     # create an audio object
     wf = wave.open(fname, 'rb')
     p = pyaudio.PyAudio()

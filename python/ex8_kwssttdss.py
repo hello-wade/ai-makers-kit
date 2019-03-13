@@ -8,34 +8,18 @@ Example 8: 음성인식 TTS 대화 결합 예제
 
 from __future__ import print_function
 
-import grpc
-
-import gigagenieRPC_pb2
-import gigagenieRPC_pb2_grpc
-
-import os
-import datetime
-import time
-import hmac
-import hashlib
 import ex1_kwstest as kws
 import ex2_getVoice2Text as gv2t
 import ex4_getText2VoiceStream as tts
 import ex6_queryVoice as dss
+
+import time
 
 '''
 본 예제는 1번, 2번, 4번, 6번 예제에 
 사용자 인증 정보가 기재되어야 정상 동작합니다.
 (CLIENT_ID, CLIENT_KEY, CLIENT_SECRET)
 '''
-
-# Config for GiGA Genie gRPC
-CLIENT_ID = ''
-CLIENT_KEY = ''
-CLIENT_SECRET = ''
-HOST = 'gate.gigagenie.ai'
-PORT = 4080
-
 
 def main():
 	#Example8 KWS+STT+DSS
@@ -45,15 +29,15 @@ def main():
 		recog=kws.test(KWSID[0])
 		if recog == 200:
 			print('KWS Dectected ...\n')
-			dss_answer = dss.queryByVoice()
-			tts_result = tts.getText2VoiceStream(dss_answer, "result_mesg.wav")
-			if dss_answer == '':
+			dssAnswer = dss.queryByVoice()
+			ttsResult = tts.getText2VoiceStream(dssAnswer, "result_mesg.wav")
+			if dssAnswer == '':
 				print('질의한 내용이 없습니다.\n\n\n')
-			elif tts_result == 500:
+			elif ttsResult == 500:
 				print("TTS 동작 에러입니다.\n\n\n")
 				break
 			else:
-				kws.play_file("result_mesg.wav")			
+				kws.gkitAudio.playWav("result_mesg.wav")
 			time.sleep(2)
 		else:
 			print('KWS Not Dectected ...')
